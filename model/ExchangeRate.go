@@ -1,10 +1,5 @@
 package model
 
-type CoinType struct {
-	CoinName interface{}
-	//ExchangeRate
-}
-
 type ExchangeRate struct {
 	Code       string `json:"code"`
 	Codein     string `json:"codein"`

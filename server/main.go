@@ -3,21 +3,27 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"github.com/ftheodoro/exchange-dollar/model"
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/ftheodoro/exchange-dollar/config"
+	"github.com/ftheodoro/exchange-dollar/model"
 )
 
 const CoinName = "USDBRL"
-const TimeRequest = 2
+const TimeRequest = 200
+const TimeSaveDataBase = 10
 
 func main() {
+
 	http.HandleFunc("/", Index)
 	http.ListenAndServe(":8080", nil)
 
 }
 func Index(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*TimeSaveDataBase)
+	defer cancel()
 	jsonData, err, httpStatus := requestExhange()
 	if err != nil {
 		w.WriteHeader(httpStatus)
@@ -25,20 +31,33 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var exchangeRate model.ExchangeRate
-
+	w.Header().Set("Content-Type", "application/json")
 	if err = json.Unmarshal(jsonData, &exchangeRate); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	db, err := config.ConnDB()
 
-	w.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("error creating database."))
+
+		return
+	}
+	err = db.WithContext(ctx).Create(exchangeRate).Error
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("timeout exceeded for saving to database"))
+		return
+	}
+
 	json.NewEncoder(w).Encode(exchangeRate)
 
 }
 
 func requestExhange() ([]byte, error, int) {
 	var url = "https://economia.awesomeapi.com.br/json/last/USD-BRL"
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*TimeRequest)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*TimeRequest)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
