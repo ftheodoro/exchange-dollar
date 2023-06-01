@@ -7,7 +7,7 @@ import (
 )
 
 func ConnDB() (*gorm.DB, error) {
-	db, err := gorm.Open(sqlite.Open("./database/db.sqlite"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open("./db.sqlite"), &gorm.Config{})
 
 	if err != nil {
 		return nil, err
