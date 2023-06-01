@@ -39,7 +39,7 @@ func main() {
 }
 
 func saveDataFile(exchange string) {
-	file, err := os.Create("exchangerate.log")
+	file, err := os.Create("exchangerate.txt")
 
 	if err != nil {
 		panic(err)
