@@ -49,7 +49,6 @@ func saveDataFile(exchange string) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(exchange)
 	dolarRate := fmt.Sprintf(" Dólar: %s", exchange)
 	_, err = file.WriteString(dolarRate)
 	if err != nil {
